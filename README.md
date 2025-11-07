@@ -223,6 +223,33 @@ docker logs java-template-mysql
 3. **数据库**：使用MyBatis Plus和SQL脚本管理数据库版本
 4. **API文档**：自动生成Swagger文档，访问 `/swagger-ui.html` 查看
 
+## 技术栈对比
+
+| 层级 | 技术 | 版本 | 主要作用 | 特点 |
+|------|------|------|--------|------|
+| **前端** | React | 19.1 | UI框架 | 最新版本，组件化开发 |
+| | TypeScript | 5.x | 类型系统 | 类型安全，开发效率高 |
+| | Redux Toolkit | 2.8 | 状态管理 | 简化Redux配置 |
+| | Ant Design | 5.26 | UI组件库 | 企业级组件库，内置11个通用组件 |
+| | Vite | 7.0 | 构建工具 | 极速热更新和构建 |
+| | React Router | 7.6 | 路由管理 | 声明式路由 |
+| **后端** | Spring Boot | 3.2 | 框架基础 | Java 17，开箱即用 |
+| | Spring Security | 3.2 | 权限认证 | JWT无状态认证 |
+| | MyBatis Plus | 3.5 | ORM框架 | 高效数据访问，代码生成 |
+| | Swagger/OpenAPI | 3 | API文档 | 自动生成接口文档 |
+| | Hutool | 5.8 | 工具库 | 常用工具函数集合 |
+| **数据库** | MySQL | 8.0 | 关系数据库 | 高性能，ACID特性 |
+| | Docker | Latest | 容器化 | 一键部署，环境隔离 |
+| **开发工具** | Node.js | 18+ | 前端运行环境 | npm包管理 |
+| | Java | 17+ | 后端运行环境 | 最新LTS版本 |
+| | Git | Latest | 版本控制 | 代码管理 |
+
 ## 许可证
 
 MIT
+
+
+
+
+
+
