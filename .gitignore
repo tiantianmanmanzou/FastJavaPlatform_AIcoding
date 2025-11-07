@@ -1,0 +1,46 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules and build
+node_modules/
+dist/
+build/
+.next/
+*.log
+
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sql.bak
+data/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride

@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: java-backend-template
+  profiles:
+    active: dev
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+# JWT配置
+jwt:
+  secret: YourSecretKeyForJWTTokenGenerationMustBeVeryLongAtLeast256Bits
+  expiration: 604800000  # 7天（单位：毫秒）
+  header: Authorization
+  token-prefix: "Bearer "
+
+security:
+  admin:
+    username: admin
+    password: Admin@123
+    real-name: 系统管理员
+    email: admin@example.com
+
+# MyBatis Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.template.module.*.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# SpringDoc配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+  group-configs:
+    - group: default
+      paths-to-match: /api/**
+
+cors:
+  allowed-origins:
+    - http://localhost:5173
+    - http://localhost:3000
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
