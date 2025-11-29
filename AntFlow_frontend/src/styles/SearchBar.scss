@@ -1,0 +1,49 @@
+.search-bar {
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+
+  .search-form {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .search-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .ant-form-item {
+    margin-bottom: 0 !important;
+    justify-content: flex-start;
+    width: 100%;
+
+    &.hidden-field {
+      display: none;
+    }
+  }
+
+  .search-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .toggle-btn {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .antd-input,
+  .antd-select,
+  .antd-date {
+    background: #f9fbff;
+    border-color: #e2e8f0;
+  }
+}

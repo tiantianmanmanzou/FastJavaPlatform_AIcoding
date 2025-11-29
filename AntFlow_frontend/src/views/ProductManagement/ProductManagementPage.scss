@@ -1,0 +1,39 @@
+.product-management-page {
+  .product-name-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .product-code {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .product-tags-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag-text {
+    font-size: 12px;
+    color: #0f172a;
+  }
+
+  .product-type-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    span {
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #ecfccb;
+      color: #3f6212;
+    }
+  }
+}
