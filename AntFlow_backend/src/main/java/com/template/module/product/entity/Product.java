@@ -16,8 +16,6 @@ public class Product {
     private String productCode;
     private String productType;
     private String description;
-    private String coverImageUrl;
-    private String originImageUrl;
     private String tags;
     private Integer status;
     private LocalDateTime createTime;

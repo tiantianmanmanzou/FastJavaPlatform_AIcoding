@@ -19,7 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final List<String> WHITE_LIST = List.of(
-        "/", "/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
+        "/", "/api/auth/login", "/api/auth/logout", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
     );
 
     private final JwtUtil jwtUtil;

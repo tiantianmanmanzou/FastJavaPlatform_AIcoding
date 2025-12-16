@@ -14,6 +14,7 @@ public class ContentModuleUpdateRequest {
     private String tone;
     private String style;
     private String contentLength;
+    private String subjectImageUrl;
     private String imageStyle;
     private String imageRatio;
     private Integer imageQuantity;
@@ -21,6 +22,7 @@ public class ContentModuleUpdateRequest {
     private String videoRatio;
     private Integer videoDuration;
     private String apiVendor;
+    private String apiName;
     private Integer sortOrder;
     private String status;
 }

@@ -23,6 +23,7 @@ export interface ContentModuleCreatePayload {
   tone?: string
   style?: string
   contentLength?: string
+  subjectImageUrl?: string
   imageStyle?: string
   imageRatio?: string
   imageQuantity?: number
@@ -30,6 +31,7 @@ export interface ContentModuleCreatePayload {
   videoRatio?: string
   videoDuration?: number
   apiVendor?: ContentApiVendor
+  apiName?: string
   sortOrder?: number
 }
 
@@ -59,6 +61,7 @@ export interface ContentTemplatePayload {
   videoRatio?: string
   videoDuration?: number
   apiVendor?: ContentApiVendor
+  apiName?: string
 }
 
 export const fetchContentModules = (params: ContentModuleQueryParams) =>
@@ -73,8 +76,12 @@ export const updateContentModule = (id: number, data: ContentModuleUpdatePayload
 export const deleteContentModule = (id: number) =>
   request.delete<ApiResponse<void>>(`/content/modules/${id}`)
 
+const LONG_GENERATION_TIMEOUT = 180000
+
 export const generateContentModule = (id: number) =>
-  request.post<ApiResponse<ContentModuleItem>>(`/content/modules/${id}/generate`)
+  request.post<ApiResponse<ContentModuleItem>>(`/content/modules/${id}/generate`, undefined, {
+    timeout: LONG_GENERATION_TIMEOUT
+  })
 
 export const fetchContentTemplates = (params: ContentTemplateQueryParams) =>
   request.get<ApiResponse<ContentTemplateItem[]>>('/content/templates', { params })

@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS pm_content_template (
     video_ratio VARCHAR(32),
     video_duration INT,
     api_vendor VARCHAR(32),
+    api_name VARCHAR(128),
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_template (template_name, platform, module_type)
@@ -103,6 +104,7 @@ CREATE TABLE IF NOT EXISTS pm_content_module (
     video_ratio VARCHAR(32),
     video_duration INT,
     api_vendor VARCHAR(32),
+    api_name VARCHAR(128),
     sort_order INT DEFAULT 0,
     status VARCHAR(32) DEFAULT 'DRAFT',
     last_generated_at TIMESTAMP NULL,
@@ -118,10 +120,136 @@ CREATE TABLE IF NOT EXISTS pm_content_module_result (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     module_id BIGINT NOT NULL,
     result_type VARCHAR(32) NOT NULL,
-    content TEXT,
-    asset_url VARCHAR(512),
+    content MEDIUMTEXT,
+    asset_url MEDIUMTEXT,
     sort_order INT DEFAULT 0,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_result_module FOREIGN KEY (module_id) REFERENCES pm_content_module(id) ON DELETE CASCADE,
     KEY idx_module_result (module_id)
+);
+
+CREATE TABLE IF NOT EXISTS pm_prompt (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    prompt_name VARCHAR(128) NOT NULL,
+    prompt_content TEXT NOT NULL,
+    prompt_type VARCHAR(32) NOT NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_prompt_type (prompt_type),
+    KEY idx_prompt_name (prompt_name)
+);
+
+CREATE TABLE IF NOT EXISTS sys_llm_provider (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    provider_code VARCHAR(64) NOT NULL UNIQUE,
+    provider_name VARCHAR(128) NOT NULL,
+    provider_type VARCHAR(32) NOT NULL,
+    vendor VARCHAR(32) COMMENT '厂商: GOOGLE, DOUBAO, MINIMAX, OPENAI, KIMI, QWEN, GLM',
+    model_name VARCHAR(128),
+    base_url VARCHAR(255),
+    api_key MEDIUMTEXT,
+    api_version VARCHAR(64),
+    status TINYINT DEFAULT 1,
+    default_flag TINYINT DEFAULT 0,
+    concurrency_limit INT DEFAULT 5,
+    timeout_seconds INT DEFAULT 30,
+    capability_tags VARCHAR(255),
+    description VARCHAR(512),
+    metadata TEXT,
+    last_synced_at TIMESTAMP NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_llm_provider_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS sys_llm_model_param_template (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    vendor VARCHAR(32) NOT NULL,
+    generation_type VARCHAR(32) NOT NULL,
+    param_key VARCHAR(64) NOT NULL,
+    param_label VARCHAR(128) NOT NULL,
+    input_type VARCHAR(32) NOT NULL,
+    required TINYINT DEFAULT 0,
+    placeholder VARCHAR(255),
+    default_value VARCHAR(255),
+    options TEXT,
+    description VARCHAR(255),
+    sort_order INT DEFAULT 0,
+    status TINYINT DEFAULT 1,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_param_template (vendor, generation_type, param_key),
+    KEY idx_param_template_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS sys_llm_provider_param (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    provider_id BIGINT NOT NULL,
+    param_key VARCHAR(64) NOT NULL,
+    param_value VARCHAR(512),
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_provider_param_provider FOREIGN KEY (provider_id) REFERENCES sys_llm_provider(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_provider_param (provider_id, param_key)
+);
+
+CREATE TABLE IF NOT EXISTS sys_reasoning_thread (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    thread_name VARCHAR(128) NOT NULL,
+    thread_identifier VARCHAR(128),
+    provider_code VARCHAR(64),
+    model_name VARCHAR(128),
+    status VARCHAR(32) NOT NULL,
+    message_count INT DEFAULT 0,
+    input_tokens INT DEFAULT 0,
+    output_tokens INT DEFAULT 0,
+    latency_millis INT DEFAULT 0,
+    error_message VARCHAR(512),
+    metadata TEXT,
+    last_activity_time TIMESTAMP NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_reasoning_thread_status (status),
+    KEY idx_reasoning_thread_identifier (thread_identifier)
+);
+
+CREATE TABLE IF NOT EXISTS sys_reasoning_thread_message (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    thread_id BIGINT NOT NULL,
+    role VARCHAR(32) NOT NULL,
+    content MEDIUMTEXT,
+    token_usage INT DEFAULT 0,
+    latency_millis INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reasoning_message_thread FOREIGN KEY (thread_id) REFERENCES sys_reasoning_thread(id) ON DELETE CASCADE,
+    KEY idx_reasoning_message_thread (thread_id)
+);
+
+CREATE TABLE IF NOT EXISTS sys_model_comparison (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    comparison_name VARCHAR(128) NOT NULL,
+    prompt TEXT NOT NULL,
+    provider_a VARCHAR(64),
+    model_a VARCHAR(128),
+    provider_b VARCHAR(64),
+    model_b VARCHAR(128),
+    evaluation_criteria TEXT,
+    status VARCHAR(32) NOT NULL,
+    result_a MEDIUMTEXT,
+    result_b MEDIUMTEXT,
+    score_a DECIMAL(5,2),
+    score_b DECIMAL(5,2),
+    verdict VARCHAR(32),
+    winner VARCHAR(64),
+    evaluation_notes MEDIUMTEXT,
+    latency_a INT DEFAULT 0,
+    latency_b INT DEFAULT 0,
+    input_tokens_a INT DEFAULT 0,
+    input_tokens_b INT DEFAULT 0,
+    output_tokens_a INT DEFAULT 0,
+    output_tokens_b INT DEFAULT 0,
+    created_by VARCHAR(64),
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_model_comparison_status (status)
 );

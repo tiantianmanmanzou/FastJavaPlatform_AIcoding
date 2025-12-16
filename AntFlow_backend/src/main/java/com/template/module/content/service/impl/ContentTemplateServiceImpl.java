@@ -58,6 +58,7 @@ public class ContentTemplateServiceImpl extends ServiceImpl<ContentTemplateMappe
         template.setVideoRatio(request.getVideoRatio());
         template.setVideoDuration(request.getVideoDuration());
         template.setApiVendor(request.getApiVendor());
+        template.setApiName(request.getApiName());
         save(template);
         return toVO(template);
     }
@@ -84,6 +85,7 @@ public class ContentTemplateServiceImpl extends ServiceImpl<ContentTemplateMappe
         template.setVideoRatio(request.getVideoRatio());
         template.setVideoDuration(request.getVideoDuration());
         template.setApiVendor(request.getApiVendor());
+        template.setApiName(request.getApiName());
         updateById(template);
         return toVO(template);
     }
@@ -124,6 +126,7 @@ public class ContentTemplateServiceImpl extends ServiceImpl<ContentTemplateMappe
             .videoRatio(template.getVideoRatio())
             .videoDuration(template.getVideoDuration())
             .apiVendor(template.getApiVendor())
+            .apiName(template.getApiName())
             .createTime(template.getCreateTime())
             .updateTime(template.getUpdateTime())
             .build();

@@ -125,30 +125,75 @@
   padding: 32px 28px;
 }
 
-.login-title {
-  margin-bottom: 6px !important;
-  text-align: center;
+.login-card__content {
+  padding: 0;
 }
 
-.login-subtitle {
+.login-card__title {
   text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-card__title h3 {
+  margin: 12px 0 6px;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+
+.login-card__title p {
+  margin: 0;
   color: #64748b;
-  margin-bottom: 30px !important;
+  font-size: 0.95rem;
 }
 
-.login-form .antd-btn {
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-form label {
   font-weight: 600;
-  letter-spacing: 0.08em;
-  height: 44px;
+  color: #0f172a;
 }
 
-.login-form .antd-input,
-.login-form .antd-date,
-.login-form .antd-select {
+.login-input-wrapper {
+  position: relative;
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.login-input {
   height: 44px;
   border-radius: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+  padding-left: 44px;
+}
+
+.login-error {
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.login-submit {
+  width: 100%;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  height: 44px;
+  border-radius: 12px;
 }
 
 @media (max-width: 768px) {

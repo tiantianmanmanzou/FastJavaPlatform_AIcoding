@@ -1,7 +1,37 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Form, Input, Modal, Select, message } from '@ui'
-import TablePageLayout from '../../components/layouts/TablePageLayout'
-import type { User, Role, TableColumn, ActionButton as ActionButtonType, SearchItem } from '../../types'
+import PageHeader from '@/components/ui/page-header'
+import { message } from '@/lib/message'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import SearchBar, { type SearchField } from '@/components/ui/search-bar'
+import ConfirmPopover from '@/components/ui/confirm-popover'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import type { User, Role } from '../../types'
 import {
   fetchUsers,
   createUser,
@@ -14,98 +44,53 @@ import {
   type UserFormPayload
 } from '../../api/user'
 import { fetchAllRoles } from '../../api/role'
+import './UserManagementUser.scss'
 
-const statusOptions = [
+const statusFilterOptions = [
   { label: '全部', value: '' },
-  { label: '启用', value: 1 },
-  { label: '禁用', value: 0 }
+  { label: '启用', value: '1' },
+  { label: '禁用', value: '0' }
 ]
 
-const formStatusOptions = statusOptions.filter((item) => item.value !== '') as Array<{ label: string; value: number }>
+interface UserFormState {
+  username: string
+  password: string
+  realName: string
+  email: string
+  mobile: string
+  department: string
+  roleIds: number[]
+  status: string
+}
 
 const UserManagementUser: React.FC = () => {
-  const [searchForm, setSearchForm] = useState<{ username?: string; email?: string; status?: number | '' }>({
-    username: '',
-    email: '',
-    status: ''
-  })
+  const [filters, setFilters] = useState({ username: '', email: '', status: '' })
+  const [searchInputs, setSearchInputs] = useState(filters)
+
   const [userList, setUserList] = useState<User[]>([])
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
   const [roleOptions, setRoleOptions] = useState<Role[]>([])
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 })
   const [loading, setLoading] = useState(false)
+
   const [formVisible, setFormVisible] = useState(false)
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [userForm, setUserForm] = useState<UserFormState>({
+    username: '',
+    password: '',
+    realName: '',
+    email: '',
+    mobile: '',
+    department: '',
+    roleIds: [] as number[],
+    status: '1'
+  })
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [form] = Form.useForm()
-  const [passwordForm] = Form.useForm()
-  const [passwordModalVisible, setPasswordModalVisible] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false)
+  const [passwordValue, setPasswordValue] = useState('')
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
-
-  const searchItems: SearchItem[] = [
-    {
-      label: '用户名',
-      prop: 'username',
-      type: 'input',
-      placeholder: '请输入用户名'
-    },
-    {
-      label: '邮箱',
-      prop: 'email',
-      type: 'input',
-      placeholder: '请输入邮箱'
-    },
-    {
-      label: '状态',
-      prop: 'status',
-      type: 'select',
-      options: statusOptions
-    }
-  ]
-
-  const actionButtons: ActionButtonType[] = [
-    { name: 'add', label: '新增用户', type: 'primary' },
-    { name: 'batchDelete', label: '批量删除', type: 'default' },
-    { name: 'refresh', label: '刷新', type: 'default' }
-  ]
-
-  const tableColumns: TableColumn[] = useMemo(() => ([
-    { prop: 'username', label: '用户名' },
-    { prop: 'realName', label: '姓名' },
-    { prop: 'email', label: '邮箱' },
-    { prop: 'mobile', label: '手机号' },
-    { prop: 'department', label: '部门' },
-    {
-      prop: 'roles',
-      label: '角色',
-      formatter: (row: User) => row.roles?.map((role) => role.roleName).join('、') || '-'
-    },
-    {
-      prop: 'status',
-      label: '状态',
-      formatter: (row: User) => (row.status === 1 ? '启用' : '禁用')
-    },
-    { prop: 'createTime', label: '创建时间' }
-  ]), [])
-
-  const tableActions: ActionButtonType[] = [
-    { name: 'edit', label: '编辑', type: 'link' },
-    { name: 'resetPassword', label: '重置密码', type: 'link' },
-    {
-      name: 'disable',
-      label: '禁用',
-      type: 'link',
-      disabled: (row: User) => row.status === 0
-    },
-    {
-      name: 'enable',
-      label: '启用',
-      type: 'link',
-      disabled: (row: User) => row.status === 1
-    },
-    { name: 'delete', label: '删除', type: 'link' }
-  ]
 
   useEffect(() => {
     fetchRoleOptions()
@@ -113,7 +98,7 @@ const UserManagementUser: React.FC = () => {
 
   useEffect(() => {
     loadUsers()
-  }, [pagination.current, pagination.pageSize, searchForm])
+  }, [filters, pagination.current, pagination.pageSize])
 
   const fetchRoleOptions = async () => {
     try {
@@ -130,9 +115,9 @@ const UserManagementUser: React.FC = () => {
       const res = await fetchUsers({
         page: pagination.current,
         pageSize: pagination.pageSize,
-        username: searchForm.username,
-        email: searchForm.email,
-        status: searchForm.status
+        username: filters.username,
+        email: filters.email,
+        status: filters.status === '' ? undefined : Number(filters.status)
       })
       const pageData = res.data
       setUserList(pageData?.list || [])
@@ -144,40 +129,62 @@ const UserManagementUser: React.FC = () => {
     }
   }
 
-  const handleSearch = (formData: Record<string, any>) => {
-    setSearchForm({
-      username: formData.username || '',
-      email: formData.email || '',
-      status: formData.status ?? ''
-    })
+  const tableRows = useMemo(() => userList, [userList])
+
+  const searchFields: SearchField[] = [
+    { key: 'username', type: 'input', placeholder: '请输入用户名' },
+    { key: 'email', type: 'input', placeholder: '请输入邮箱' },
+    {
+      key: 'status',
+      type: 'select',
+      placeholder: '全部状态',
+      options: [
+        { label: '启用', value: '1' },
+        { label: '禁用', value: '0' }
+      ]
+    }
+  ]
+
+  const handleSearch = () => {
+    setFilters(searchInputs)
     setPagination((prev) => ({ ...prev, current: 1 }))
   }
 
   const handleReset = () => {
-    setSearchForm({ username: '', email: '', status: '' })
+    const reset = { username: '', email: '', status: '' }
+    setSearchInputs(reset)
+    setFilters(reset)
     setPagination((prev) => ({ ...prev, current: 1 }))
   }
 
   const openCreateModal = () => {
     setFormMode('create')
     setCurrentUser(null)
-    form.resetFields()
-    form.setFieldsValue({ status: 1, roleIds: [] })
+    setUserForm({
+      username: '',
+      password: '',
+      realName: '',
+      email: '',
+      mobile: '',
+      department: '',
+      roleIds: [],
+      status: '1'
+    })
     setFormVisible(true)
   }
 
   const openEditModal = (record: User) => {
     setFormMode('edit')
     setCurrentUser(record)
-    form.resetFields()
-    form.setFieldsValue({
+    setUserForm({
       username: record.username,
-      email: record.email,
-      realName: record.realName,
-      mobile: record.mobile,
-      department: record.department,
-      status: record.status,
-      roleIds: record.roles?.map((item) => item.roleId) || []
+      password: '',
+      realName: record.realName || '',
+      email: record.email || '',
+      mobile: record.mobile || '',
+      department: record.department || '',
+      roleIds: record.roles?.map((item) => item.roleId) || [],
+      status: record.status?.toString() ?? '1'
     })
     setFormVisible(true)
   }
@@ -187,32 +194,26 @@ const UserManagementUser: React.FC = () => {
       case 'add':
         openCreateModal()
         break
-      case 'batchDelete':
-        if (selectedRowKeys.length === 0) {
-          message.warning('请选择要删除的用户')
-          return
-        }
-        Modal.confirm({
-          title: '确认删除',
-          content: `确定删除选中的 ${selectedRowKeys.length} 个用户吗？`,
-          onOk: async () => {
-            try {
-              const ids = selectedRowKeys.map((key) => Number(key))
-              await batchDeleteUsers(ids)
-              message.success('删除成功')
-              setSelectedRowKeys([])
-              loadUsers()
-            } catch (error) {
-              console.error(error)
-            }
-          }
-        })
-        break
       case 'refresh':
         loadUsers()
         break
       default:
         break
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请选择要删除的用户')
+      return
+    }
+    try {
+      await batchDeleteUsers(selectedRowKeys)
+      message.success('删除成功')
+      setSelectedRowKeys([])
+      loadUsers()
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -233,23 +234,8 @@ const UserManagementUser: React.FC = () => {
         break
       case 'resetPassword':
         setCurrentUser(record)
-        passwordForm.resetFields()
+        setPasswordValue('')
         setPasswordModalVisible(true)
-        break
-      case 'delete':
-        Modal.confirm({
-          title: '确认删除',
-          content: `确定删除用户 ${record.username} 吗？`,
-          onOk: async () => {
-            try {
-              await deleteUser(record.id)
-              message.success('删除成功')
-              loadUsers()
-            } catch (error) {
-              console.error(error)
-            }
-          }
-        })
         break
       case 'disable':
         changeStatus(record, 0)
@@ -262,18 +248,59 @@ const UserManagementUser: React.FC = () => {
     }
   }
 
-  const submitUserForm = async () => {
+  const handleDeleteUser = async (record: User) => {
     try {
-      const values = await form.validateFields()
+      await deleteUser(record.id)
+      message.success('删除成功')
+      loadUsers()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const validateUserForm = () => {
+    if (!userForm.username.trim()) {
+      message.error('请输入用户名')
+      return false
+    }
+    if (formMode === 'create' && !userForm.password.trim()) {
+      message.error('请输入密码')
+      return false
+    }
+    if (!userForm.roleIds.length) {
+      message.error('请选择角色')
+      return false
+    }
+    return true
+  }
+
+  const buildFormPayload = (formState: Omit<UserFormState, 'password'>): UserFormPayload => ({
+    username: formState.username.trim(),
+    email: formState.email || undefined,
+    realName: formState.realName || undefined,
+    mobile: formState.mobile || undefined,
+    department: formState.department || undefined,
+    status: Number(formState.status),
+    roleIds: formState.roleIds
+  })
+
+  const submitUserForm = async () => {
+    if (!validateUserForm()) return
+    try {
       setSubmitting(true)
       if (formMode === 'create') {
-        const { password, ...rest } = values
-        const payload: UserCreatePayload = { ...(rest as UserFormPayload), password }
+        const { password, ...rest } = userForm
+        const basePayload = buildFormPayload(rest)
+        const payload: UserCreatePayload = {
+          ...basePayload,
+          password
+        }
         await createUser(payload)
         message.success('用户创建成功')
       } else if (currentUser) {
-        const { password, ...rest } = values
-        await updateUser(currentUser.id, rest as UserFormPayload)
+        const { password, ...rest } = userForm
+        const payload: UserFormPayload = buildFormPayload(rest)
+        await updateUser(currentUser.id, payload)
         message.success('用户更新成功')
       }
       setFormVisible(false)
@@ -286,11 +313,14 @@ const UserManagementUser: React.FC = () => {
   }
 
   const submitPassword = async () => {
+    if (!passwordValue.trim()) {
+      message.error('请输入新密码')
+      return
+    }
+    if (!currentUser) return
+    setPasswordSubmitting(true)
     try {
-      const values = await passwordForm.validateFields()
-      if (!currentUser) return
-      setPasswordSubmitting(true)
-      await updateUserPassword(currentUser.id, values.password)
+      await updateUserPassword(currentUser.id, passwordValue)
       message.success('密码已更新')
       setPasswordModalVisible(false)
     } catch (error) {
@@ -300,122 +330,325 @@ const UserManagementUser: React.FC = () => {
     }
   }
 
-  const handleSelectionChange = (keys: React.Key[]) => {
-    setSelectedRowKeys(keys)
+  const toggleRowSelection = (id: number, checked: boolean) => {
+    setSelectedRowKeys((prev) => {
+      if (checked) {
+        return prev.includes(id) ? prev : [...prev, id]
+      }
+      return prev.filter((key) => key !== id)
+    })
   }
 
-  const handlePagination = (page: number, size: number) => {
-    setPagination((prev) => ({ ...prev, current: page, pageSize: size }))
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRowKeys(tableRows.map((item) => item.id))
+    } else {
+      setSelectedRowKeys([])
+    }
   }
 
-  const renderUserForm = () => (
-    <Form form={form} layout="vertical">
-      <Form.Item
-        name="username"
-        label="用户名"
-        rules={[{ required: true, message: '请输入用户名' }]}
-      >
-        <Input placeholder="请输入用户名" disabled={formMode === 'edit'} />
-      </Form.Item>
-      {formMode === 'create' && (
-        <Form.Item
-          name="password"
-          label="密码"
-          rules={[{ required: true, message: '请输入密码' }]}
-        >
-          <Input.Password placeholder="请输入密码" />
-        </Form.Item>
-      )}
-      <Form.Item name="realName" label="姓名">
-        <Input placeholder="请输入姓名" />
-      </Form.Item>
-      <Form.Item name="email" label="邮箱">
-        <Input placeholder="请输入邮箱" />
-      </Form.Item>
-      <Form.Item name="mobile" label="手机号">
-        <Input placeholder="请输入手机号" />
-      </Form.Item>
-      <Form.Item name="department" label="部门">
-        <Input placeholder="请输入部门" />
-      </Form.Item>
-      <Form.Item name="roleIds" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
-        <Select
-          mode="multiple"
-          placeholder="请选择角色"
-          options={roleOptions.map((role) => ({ label: role.roleName, value: role.id }))}
-        />
-      </Form.Item>
-      <Form.Item
-        name="status"
-        label="状态"
-        initialValue={1}
-        rules={[{ required: true, message: '请选择状态' }]}
-      >
-        <Select options={formStatusOptions} />
-      </Form.Item>
-    </Form>
-  )
+  const handlePagination = (page: number) => {
+    setPagination((prev) => ({ ...prev, current: page }))
+  }
 
-  const renderPasswordForm = () => (
-    <Form form={passwordForm} layout="vertical">
-      <Form.Item
-        name="password"
-        label="新密码"
-        rules={[{ required: true, message: '请输入新密码' }]}
-      >
-        <Input.Password placeholder="请输入新密码" />
-      </Form.Item>
-    </Form>
-  )
+  const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
 
   return (
-    <>
-      <TablePageLayout
-        title="用户管理"
-        searchItems={searchItems}
-        initialFormData={searchForm}
-        onSearch={handleSearch}
-        onReset={handleReset}
-        actionButtons={actionButtons}
-        onAction={handleAction}
-        tableData={userList}
-        tableColumns={tableColumns}
-        loading={loading}
-        showSelection={true}
-        showTableAction={true}
-        tableActions={tableActions}
-        rowKey="id"
-        onSelectionChange={handleSelectionChange}
-        onTableAction={handleTableAction}
-        total={pagination.total}
-        current={pagination.current}
-        pageSize={pagination.pageSize}
-        onPagination={handlePagination}
-      />
+    <div className="user-management-page space-y-6">
+      <PageHeader title="用户管理" />
 
-      <Modal
-        open={formVisible}
-        title={formMode === 'create' ? '新增用户' : '编辑用户'}
-        onCancel={() => setFormVisible(false)}
-        onOk={submitUserForm}
-        confirmLoading={submitting}
-        destroyOnClose
-        width={520}
-      >
-        {renderUserForm()}
-      </Modal>
+      <Card>
+        <CardContent className="space-y-6">
+          <SearchBar
+            fields={searchFields}
+            values={searchInputs}
+            onValuesChange={setSearchInputs}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            loading={loading}
+            actions={
+              <>
+                <Button onClick={() => handleAction('add')}>新增用户</Button>
+                <ConfirmPopover
+                  title="批量删除用户"
+                  description={`确定删除选中的 ${selectedRowKeys.length} 个用户吗？`}
+                  onConfirm={handleBatchDelete}
+                  disabled={selectedRowKeys.length === 0}
+                >
+                  <Button variant="outline" disabled={selectedRowKeys.length === 0}>
+                    批量删除
+                  </Button>
+                </ConfirmPopover>
+                <Button variant="ghost" onClick={() => handleAction('refresh')} disabled={loading}>
+                  刷新
+                </Button>
+              </>
+            }
+          />
+        </CardContent>
+      </Card>
 
-      <Modal
-        open={passwordModalVisible}
-        title={`重置密码 - ${currentUser?.username || ''}`}
-        onCancel={() => setPasswordModalVisible(false)}
-        onOk={submitPassword}
-        confirmLoading={passwordSubmitting}
-        destroyOnClose
-      >
-        {renderPasswordForm()}
-      </Modal>
-    </>
+      <Card>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={selectedRowKeys.length > 0 && selectedRowKeys.length === tableRows.length}
+                    onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))}
+                  />
+                </TableHead>
+                <TableHead>用户名</TableHead>
+                <TableHead>姓名</TableHead>
+                <TableHead>邮箱</TableHead>
+                <TableHead>手机号</TableHead>
+                <TableHead>部门</TableHead>
+                <TableHead>角色</TableHead>
+                <TableHead className="w-20 text-center">状态</TableHead>
+                <TableHead className="w-40 text-center">创建时间</TableHead>
+                <TableHead className="w-48 text-center">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-sm text-slate-500">
+                    数据加载中...
+                  </TableCell>
+                </TableRow>
+              )}
+              {!loading && tableRows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-sm text-slate-500">
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              )}
+              {!loading &&
+                tableRows.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedRowKeys.includes(item.id)}
+                        onCheckedChange={(checked) => toggleRowSelection(item.id, Boolean(checked))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium text-slate-900">{item.username}</div>
+                    </TableCell>
+                    <TableCell>{item.realName || '-'}</TableCell>
+                    <TableCell>{item.email || '-'}</TableCell>
+                    <TableCell>{item.mobile || '-'}</TableCell>
+                    <TableCell>{item.department || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {item.roles?.length
+                          ? item.roles.map((role) => (
+                              <Badge key={role.roleId} variant="secondary" className="bg-slate-100 text-slate-600">
+                                {role.roleName}
+                              </Badge>
+                            ))
+                          : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={item.status === 1 ? 'text-emerald-600' : 'text-rose-500'}>
+                        {item.status === 1 ? '启用' : '禁用'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center text-sm text-slate-500">
+                      {item.createTime || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap justify-center gap-2 text-sm">
+                        <Button variant="link" size="sm" className="px-0" onClick={() => handleTableAction('edit', item)}>
+                          编辑
+                        </Button>
+                        <Button variant="link" size="sm" className="px-0" onClick={() => handleTableAction('resetPassword', item)}>
+                          重置密码
+                        </Button>
+                        {item.status === 1 ? (
+                          <Button variant="link" size="sm" className="px-0 text-rose-500" onClick={() => handleTableAction('disable', item)}>
+                            禁用
+                          </Button>
+                        ) : (
+                          <Button variant="link" size="sm" className="px-0 text-emerald-600" onClick={() => handleTableAction('enable', item)}>
+                            启用
+                          </Button>
+                        )}
+                        <ConfirmPopover
+                          title="删除用户"
+                          description={`确定删除用户 ${item.username} 吗？`}
+                          onConfirm={() => handleDeleteUser(item)}
+                        >
+                          <Button variant="link" size="sm" className="px-0 text-rose-500">
+                            删除
+                          </Button>
+                        </ConfirmPopover>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+            <span>第 {pagination.current} / {totalPages} 页</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePagination(Math.max(1, pagination.current - 1))}
+                disabled={pagination.current === 1}
+              >
+                上一页
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePagination(Math.min(totalPages, pagination.current + 1))}
+                disabled={pagination.current === totalPages}
+              >
+                下一页
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={formVisible} onOpenChange={(open) => setFormVisible(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{formMode === 'create' ? '新增用户' : '编辑用户'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label>用户名</Label>
+              <Input
+                placeholder="请输入用户名"
+                value={userForm.username}
+                disabled={formMode === 'edit'}
+                onChange={(e) => setUserForm((prev) => ({ ...prev, username: e.target.value }))}
+              />
+            </div>
+            {formMode === 'create' && (
+              <div className="flex flex-col gap-2">
+                <Label>密码</Label>
+                <Input
+                  type="password"
+                  placeholder="请输入密码"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm((prev) => ({ ...prev, password: e.target.value }))}
+                />
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <Label>姓名</Label>
+              <Input
+                placeholder="请输入姓名"
+                value={userForm.realName}
+                onChange={(e) => setUserForm((prev) => ({ ...prev, realName: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>邮箱</Label>
+              <Input
+                placeholder="请输入邮箱"
+                value={userForm.email}
+                onChange={(e) => setUserForm((prev) => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>手机号</Label>
+              <Input
+                placeholder="请输入手机号"
+                value={userForm.mobile}
+                onChange={(e) => setUserForm((prev) => ({ ...prev, mobile: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>部门</Label>
+              <Input
+                placeholder="请输入部门"
+                value={userForm.department}
+                onChange={(e) => setUserForm((prev) => ({ ...prev, department: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <Label>
+                角色 <span className="text-rose-500">*</span>
+              </Label>
+              <div className="grid grid-cols-2 gap-2 rounded-md border border-slate-200 p-3">
+                {roleOptions.map((role) => (
+                  <label key={role.id} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                    <Checkbox
+                      checked={userForm.roleIds.includes(role.id)}
+                      onCheckedChange={() =>
+                        setUserForm((prev) => ({
+                          ...prev,
+                          roleIds: prev.roleIds.includes(role.id)
+                            ? prev.roleIds.filter((id) => id !== role.id)
+                            : [...prev.roleIds, role.id]
+                        }))
+                      }
+                    />
+                    {role.roleName}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>状态</Label>
+              <Select
+                value={userForm.status}
+                onValueChange={(value) => setUserForm((prev) => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="0">禁用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFormVisible(false)} disabled={submitting}>
+              取消
+            </Button>
+            <Button onClick={submitUserForm} disabled={submitting}>
+              {submitting ? '保存中...' : '保存'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={passwordModalVisible} onOpenChange={(open) => setPasswordModalVisible(open)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>重置密码 - {currentUser?.username || ''}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>新密码</Label>
+            <Input
+              type="password"
+              placeholder="请输入新密码"
+              value={passwordValue}
+              onChange={(e) => setPasswordValue(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordModalVisible(false)} disabled={passwordSubmitting}>
+              取消
+            </Button>
+            <Button onClick={submitPassword} disabled={passwordSubmitting}>
+              {passwordSubmitting ? '提交中...' : '保存'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 

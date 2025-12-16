@@ -6,7 +6,6 @@ import App from './App.tsx'
 import './index.css'
 import './styles/global.scss'
 import './styles/scroll.scss'
-import './ui/styles.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

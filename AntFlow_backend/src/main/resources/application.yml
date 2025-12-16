@@ -31,7 +31,7 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: com.template.common.logging.SafeMyBatisLog
   global-config:
     db-config:
       id-type: auto
@@ -67,3 +67,8 @@ cors:
     - "*"
   allow-credentials: true
   max-age: 3600
+
+file:
+  storage:
+    base-url: ${FILE_STORAGE_BASE_URL:http://localhost:8080/public/uploads}
+    location: ${FILE_STORAGE_LOCATION:storage/uploads}

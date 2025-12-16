@@ -3,6 +3,8 @@ package com.template.module.product.controller;
 import com.template.common.response.PageResult;
 import com.template.common.response.Result;
 import com.template.module.product.dto.ProductCreateRequest;
+import com.template.module.product.dto.ProductImageRequest;
+import com.template.module.product.dto.ProductImageVO;
 import com.template.module.product.dto.ProductQueryRequest;
 import com.template.module.product.dto.ProductSimpleVO;
 import com.template.module.product.dto.ProductUpdateRequest;
@@ -53,6 +55,22 @@ public class ProductController {
     public Result<Void> delete(@PathVariable Long id) {
         productService.deleteProduct(id);
         return Result.success();
+    }
+
+    @PostMapping("/{id}/images")
+    public Result<List<ProductImageVO>> addImages(@PathVariable Long id, @RequestBody List<@Valid ProductImageRequest> requests) {
+        return Result.success(productService.addProductImages(id, requests));
+    }
+
+    @DeleteMapping("/{productId}/images/{imageId}")
+    public Result<Void> deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
+        productService.deleteProductImage(productId, imageId);
+        return Result.success();
+    }
+
+    @PutMapping("/{productId}/images/{imageId}/primary")
+    public Result<List<ProductImageVO>> setPrimary(@PathVariable Long productId, @PathVariable Long imageId) {
+        return Result.success(productService.setPrimaryImage(productId, imageId));
     }
 
     @GetMapping("/simple")

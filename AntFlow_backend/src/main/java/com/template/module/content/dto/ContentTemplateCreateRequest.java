@@ -27,4 +27,5 @@ public class ContentTemplateCreateRequest {
     private String videoRatio;
     private Integer videoDuration;
     private String apiVendor;
+    private String apiName;
 }

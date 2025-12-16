@@ -24,6 +24,7 @@ public class ContentTemplateVO {
     private String videoRatio;
     private Integer videoDuration;
     private String apiVendor;
+    private String apiName;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

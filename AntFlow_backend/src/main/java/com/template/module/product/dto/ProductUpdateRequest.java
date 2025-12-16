@@ -17,11 +17,9 @@ public class ProductUpdateRequest {
 
     private String description;
 
-    private String coverImageUrl;
-
-    private String originImageUrl;
-
     private List<String> tags;
 
     private Integer status;
+
+    private List<ProductImageRequest> images;
 }

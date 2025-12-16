@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +25,7 @@ public class SecurityConfig {
 
     private static final String[] WHITE_LIST = {
         "/", "/actuator/health", "/api/auth/**", "/swagger-ui/**", "/swagger-resources/**",
-        "/v3/api-docs/**", "/swagger-ui.html"
+        "/v3/api-docs/**", "/swagger-ui.html", "/public/**"
     };
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;

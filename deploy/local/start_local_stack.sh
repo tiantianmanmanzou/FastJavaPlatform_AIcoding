@@ -70,7 +70,7 @@ kill_by_port() {
 
   log_info "Terminating processes on port ${port}: ${targets[*]}"
   printf '%s\n' "${targets[@]}" | xargs kill -TERM >/dev/null 2>&1 || true
-  sleep 2
+  sleep 0.5
   local remaining=()
   for pid in "${targets[@]}"; do
     if kill -0 "${pid}" 2>/dev/null; then
@@ -110,17 +110,24 @@ start_backend() {
   ensure_command mvn
   mkdir -p "${LOG_DIR}"
   local backend_log="${LOG_DIR}/backend.log"
+  local jvm_args="${BACKEND_JVM_OPTS:-}"
   log_info "Launching Spring Boot backend on port ${BACKEND_PORT} (profile: ${SPRING_PROFILE})..."
   log_info "Backend will be available at: http://localhost:${BACKEND_PORT}"
   log_info "Swagger docs: http://localhost:${BACKEND_PORT}/swagger-ui.html"
   log_info "Backend logs -> ${backend_log} (mirrored to console)"
   (
     cd "${BACKEND_DIR}"
-    mvn spring-boot:run -Dspring-boot.run.profiles="${SPRING_PROFILE}" \
-      2>&1 | tee -a "${backend_log}"
-  ) &
-  BACKEND_PID=$!
-  sleep 2
+    local mvn_args=(
+      spring-boot:run
+      "-Dspring-boot.run.profiles=${SPRING_PROFILE}"
+      "-Dspring-boot.run.arguments=--server.port=${BACKEND_PORT}"
+    )
+    if [[ -n "${jvm_args}" ]]; then
+      mvn_args+=("-Dspring-boot.run.jvmArguments=${jvm_args}")
+      log_info "Backend JVM args: ${jvm_args}"
+    fi
+    mvn "${mvn_args[@]}" 2>&1 | tee -a "${backend_log}"
+  )
 }
 
 start_frontend() {
@@ -136,9 +143,7 @@ start_frontend() {
     cd "${FRONTEND_DIR}"
     exec npm run dev -- --host "${FRONTEND_HOST}" --port "${FRONTEND_PORT}" --strictPort \
       >>"${frontend_log}" 2>&1
-  ) &
-  FRONTEND_PID=$!
-  sleep 2
+  )
 }
 
 check_local_mysql() {
@@ -163,6 +168,61 @@ check_local_mysql() {
   fi
 
   log_warn "mysqladmin/nc not available; skipping automatic MySQL check. Make sure MySQL is running and accessible."
+}
+
+wait_for_backend() {
+  local max_attempts="${BACKEND_WAIT_SECONDS:-120}"
+  local attempt=0
+  local health_path="${BACKEND_HEALTH_PATH:-/actuator/health}"
+  log_info "Waiting for backend to be ready..."
+
+  while [ $attempt -lt $max_attempts ]; do
+    local status_code
+    status_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 \
+      "http://localhost:${BACKEND_PORT}${health_path}" || echo "000")
+    if [[ "${status_code}" != "000" ]]; then
+      if [[ "${status_code}" -ge 200 && "${status_code}" -lt 300 ]]; then
+        log_green "✓ Backend is ready!"
+      else
+        log_warn "Backend health returned HTTP ${status_code}; treating backend as up."
+        log_green "✓ Backend is responding!"
+      fi
+      return 0
+    fi
+
+    if [ $((attempt % 5)) -eq 0 ] && [ $attempt -gt 0 ]; then
+      log_info "Waiting for backend... ($attempt/$max_attempts seconds)"
+    fi
+
+    sleep 1
+    attempt=$((attempt + 1))
+  done
+
+  log_error "Backend failed to start within $max_attempts seconds"
+  return 1
+}
+
+wait_for_frontend() {
+  local max_attempts="${FRONTEND_WAIT_SECONDS:-30}"
+  local attempt=0
+  log_info "Waiting for frontend to be ready..."
+
+  while [ $attempt -lt $max_attempts ]; do
+    if curl -sSf --max-time 2 "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
+      log_green "✓ Frontend is ready!"
+      return 0
+    fi
+
+    if [ $((attempt % 5)) -eq 0 ] && [ $attempt -gt 0 ]; then
+      log_info "Waiting for frontend... ($attempt/$max_attempts seconds)"
+    fi
+
+    sleep 1
+    attempt=$((attempt + 1))
+  done
+
+  log_error "Frontend failed to start within $max_attempts seconds"
+  return 1
 }
 
 cleanup_processes() {
@@ -198,8 +258,21 @@ main() {
   check_local_mysql
 
   kill_existing_processes
-  start_backend
-  start_frontend
+
+  # Start backend in background
+  (
+    start_backend
+  ) &
+  BACKEND_PID=$!
+
+  # Start frontend in background
+  (
+    start_frontend
+  ) &
+  FRONTEND_PID=$!
+
+  wait_for_backend
+  wait_for_frontend
 
   log_info "Backend PID: ${BACKEND_PID}"
   log_info "Frontend PID: ${FRONTEND_PID}"

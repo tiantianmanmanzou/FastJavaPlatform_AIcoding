@@ -14,6 +14,11 @@
   :global(.ant-btn) {
     margin-right: 10px;
     margin-bottom: 10px;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    font-size: 11px !important;
     
     &:last-child {
       margin-right: 0;

@@ -1,11 +1,10 @@
 .page-shell {
-  min-height: calc(100vh - 48px);
-  padding: 16px;
+  min-height: calc(100vh - 40px);
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 55%),
-    linear-gradient(180deg, #f5f7fb 0%, #eef2f6 40%, #e3e9f0 100%);
+  gap: 6px;
+  background: #fff;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -29,14 +28,14 @@
 .page-toolbar {
   border-radius: 12px !important;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-  padding: 12px !important;
+  padding: 8px !important;
   margin-bottom: 0 !important;
 }
 
 .page-toolbar-content {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   font-size: 12px;
 }
@@ -54,12 +53,22 @@
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.1);
   padding: 14px !important;
   margin-top: 0 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.page-panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .page-stack {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+  flex: 1;
 
   .page-toolbar {
     border-bottom-left-radius: 0 !important;
@@ -70,6 +79,7 @@
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
     border-top: 1px solid #edf2f7;
+    flex: 1;
   }
 }
 

@@ -1,10 +1,11 @@
 .content-creation-page {
   display: grid;
-  grid-template-columns: 260px 1fr 340px;
   gap: 16px;
   padding: 16px;
   background: #f8fafc;
-  min-height: calc(100vh - 140px);
+  height: calc(100vh - 140px);
+  max-height: calc(100vh - 140px);
+  transition: grid-template-columns 0.1s ease-out;
 
   .column {
     background: #fff;
@@ -13,6 +14,21 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transition: box-shadow 0.2s ease;
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .resizable-divider {
+    opacity: 0;
+    background: linear-gradient(90deg, transparent, #6366f1, transparent);
+    transition: opacity 0.2s ease;
+
+    &:hover,
+    &:active {
+      opacity: 1 !important;
+      background: linear-gradient(90deg, transparent, #6366f1, transparent);
+    }
   }
 
   .column.center {
@@ -22,6 +38,12 @@
   .column.left,
   .column.right {
     padding: 16px;
+    overflow: hidden;
+  }
+
+  .column.right > * {
+    height: 100%;
+    max-height: 100%;
   }
 
   .platform-switcher {
@@ -177,23 +199,71 @@
   }
 
   .cc-module-results {
-    min-height: 120px;
+    min-height: 220px;
   }
 
   .cc-image-preview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
 
     .preview-image {
       border-radius: 10px;
       overflow: hidden;
       border: 1px solid #e2e8f0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-      img {
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+      }
+
+      .image-wrapper {
+        position: relative;
         width: 100%;
-        height: 80px;
-        object-fit: cover;
+        height: 200px;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          display: block;
+          background: #f8fafc;
+        }
+
+        .image-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          color: white;
+        }
+
+        &:hover .image-overlay {
+          opacity: 1;
+        }
+      }
+
+      &.fallback {
+        background: #f8fafc;
+        color: #94a3b8;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      .preview-placeholder {
+        padding: 8px;
+        text-align: center;
       }
     }
   }
@@ -224,6 +294,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 
   &.empty {
     align-items: center;
@@ -239,14 +311,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+    gap: 12px;
 
     h4 {
       margin: 0;
+      font-size: 16px;
     }
 
     .status {
-      margin-left: 8px;
       padding: 2px 8px;
       border-radius: 999px;
       font-size: 11px;
@@ -258,8 +332,9 @@
     }
 
     .timestamp {
-      font-size: 12px;
+      font-size: 11px;
       color: #94a3b8;
+      white-space: nowrap;
     }
   }
 
@@ -268,28 +343,99 @@
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
+    flex-shrink: 0;
   }
 
   .cc-config-form {
     flex: 1;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: min-content;
+    gap: 50px;
+    row-gap: 8px;
+    min-height: 0;
+    align-content: flex-start;
+    align-items: flex-start;
+    // 给 focus ring 留出空间，避免左侧被 cc-config-panel 的 overflow:hidden 裁切
+    padding-left: 4px;
+    padding-right: 4px;
 
     .form-field {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
+      flex-shrink: 0;
+      min-width: 0;
 
       label {
-        font-size: 13px;
+        font-size: 14px;
         color: #475569;
+        margin-bottom: 0;
+      }
+
+      &.full-row {
+        grid-column: 1 / -1;
       }
     }
   }
 
   .cc-config-footer {
-    margin-top: 16px;
+    margin-top: 8px;
+    flex-shrink: 0;
+    padding-top: 8px;
+  }
+}
+
+.subject-image-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15px, 1fr));
+  gap: 10px;
+  max-width: 80px;
+}
+
+.subject-thumb {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  aspect-ratio: 1 / 1;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .subject-thumb-mask {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #fff;
+    background: rgba(15, 23, 42, 0.55);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 13px;
+  }
+
+  &.active {
+    border-color: #6366f1;
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.18);
+
+    .subject-thumb-mask {
+      opacity: 1;
+    }
+  }
+
+  &:hover .subject-thumb-mask {
+    opacity: 1;
   }
 }

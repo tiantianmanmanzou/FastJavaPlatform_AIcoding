@@ -27,6 +27,7 @@ const userSlice = createSlice({
     },
     setToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload
+      state.isAuthenticated = Boolean(action.payload)
     },
     logout: (state) => {
       state.userInfo = null

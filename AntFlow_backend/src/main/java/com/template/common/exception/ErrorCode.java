@@ -25,7 +25,13 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(2001, "产品不存在"),
     PRODUCT_CODE_DUPLICATED(2002, "产品编码已存在"),
     CONTENT_TEMPLATE_NOT_FOUND(2101, "模板不存在"),
-    CONTENT_MODULE_NOT_FOUND(2201, "内容模块不存在");
+    CONTENT_MODULE_NOT_FOUND(2201, "内容模块不存在"),
+
+    LLM_PROVIDER_NOT_FOUND(2301, "大模型配置不存在"),
+    LLM_PROVIDER_CODE_EXISTS(2302, "大模型编码已存在"),
+    MODEL_COMPARISON_NOT_FOUND(2401, "模型对比记录不存在"),
+    REASONING_THREAD_NOT_FOUND(2501, "推理线程不存在"),
+    PROMPT_NOT_FOUND(2601, "提示词不存在");
 
     private final int code;
     private final String message;

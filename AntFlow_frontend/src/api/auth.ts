@@ -10,5 +10,5 @@ export interface LoginPayload {
 export const login = (data: LoginPayload) =>
   request.post<ApiResponse<LoginResult>>('/auth/login', data)
 
-export const fetchCurrentUser = () =>
-  request.get<ApiResponse<User>>('/auth/info')
+export const fetchCurrentUser = (options?: { silent?: boolean }) =>
+  request.get<ApiResponse<User>>('/auth/info', { silent: options?.silent })

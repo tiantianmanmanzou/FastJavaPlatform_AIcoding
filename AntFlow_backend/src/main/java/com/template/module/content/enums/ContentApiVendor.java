@@ -5,7 +5,11 @@ import java.util.Arrays;
 public enum ContentApiVendor {
     GOOGLE("GOOGLE"),
     DOUBAO("DOUBAO"),
-    OPENAI("OPENAI");
+    OPENAI("OPENAI"),
+    MINIMAX("MINIMAX"),
+    KIMI("KIMI"),
+    QWEN("QWEN"),
+    GLM("GLM");
 
     private final String code;
 

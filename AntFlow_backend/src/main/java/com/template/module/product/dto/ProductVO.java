@@ -14,10 +14,9 @@ public class ProductVO {
     private String productCode;
     private String productType;
     private String description;
-    private String coverImageUrl;
-    private String originImageUrl;
     private List<String> tags;
     private Integer status;
+    private List<ProductImageVO> images;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

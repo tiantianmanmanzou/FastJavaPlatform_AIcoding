@@ -33,10 +33,32 @@ const localPreviewPlugin = (): Plugin => {
 export default defineConfig({
   plugins: [react(), localPreviewPlugin()],
   base: './',
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      overlay: false,
+      port: 24678
+    },
+    watch: {
+      usePolling: true,
+      interval: 100
+    }
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@reduxjs/toolkit',
+      'axios',
+      'dayjs'
+    ]
+  },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@ui': resolve(__dirname, 'src/ui')
+      '@': resolve(__dirname, 'src')
     }
   },
   build: {
