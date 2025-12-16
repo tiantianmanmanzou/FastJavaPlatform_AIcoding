@@ -21,6 +21,7 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 log_info() { echo "[INFO] $*"; }
 log_warn() { echo "[WARN] $*" >&2; }
 log_error() { echo "[ERROR] $*" >&2; }
+log_green() { echo -e "\033[32m$*\033[0m"; }
 
 ensure_directory() {
   if [[ ! -d "$1" ]]; then
@@ -203,12 +204,13 @@ main() {
   log_info "Backend PID: ${BACKEND_PID}"
   log_info "Frontend PID: ${FRONTEND_PID}"
   log_info "=========================================="
-  log_info "✨ System is ready!"
+  log_green "✨ System is ready!"
   log_info "=========================================="
   log_info "Frontend:  http://localhost:${FRONTEND_PORT}/#/login"
   log_info "Backend:   http://localhost:${BACKEND_PORT}"
   log_info "Swagger:   http://localhost:${BACKEND_PORT}/swagger-ui.html"
-  log_info "Login:     admin / Admin@123"
+  log_green "Login:     admin / Admin@123"
+  log_green "Login URL: http://localhost:${FRONTEND_PORT}/#/login"
   log_info "=========================================="
   log_info "Press Ctrl+C to stop both servers."
 
